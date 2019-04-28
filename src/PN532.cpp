@@ -657,7 +657,7 @@ bool PN532::WaitReady()
     {
         if (timer >= PN532_TIMEOUT) 
         {
-            if (mu8_DebugLevel > 0) Utils::Print("WaitReady() -> TIMEOUT\r\n");
+            Utils::Print("WaitReady() -> TIMEOUT\r\n");
             return false;
         }
         Utils::DelayMilli(10);

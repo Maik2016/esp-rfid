@@ -1,28 +1,17 @@
 /*
-MIT License
+   Authors :    Ömer Şiar Baysal
+                ESP-RFID Community
 
-Copyright (c) 2018 esp-rfid Community
-Copyright (c) 2017 Ömer Şiar Baysal
+   Released to Public Domain
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+   THE SOFTWARE.
  */
-#define VERSION "1.0.2"
 
 #include "Arduino.h"
 #include <ESP8266WiFi.h>
@@ -36,16 +25,16 @@ SOFTWARE.
 #include <Ticker.h>
 #include "Ntp.h"
 #include <AsyncMqttClient.h>
-#include <Bounce2.h>
 
- //#define DEBUG
+#define DEBUG
 
 #ifdef OFFICIALBOARD
 
 #include <Wiegand.h>
 
 WIEGAND wg;
-int relayPin = 13;
+int relayPin = 13; //D7
+
 
 #endif
 
@@ -54,17 +43,19 @@ int relayPin = 13;
 #include <MFRC522.h>
 #include "PN532.h"
 #include <Wiegand.h>
-#include "rfid125kHz.h"
 
 MFRC522 mfrc522 = MFRC522();
 PN532 pn532;
 WIEGAND wg;
-RFID_Reader RFIDr;
 
 int rfidss;
 int readerType;
 int relayPin;
-
+int relayPinClose = 14; //D5
+int relayPinBell = 12; //D6
+int relayAlarmPin = 13; //D7
+int watchdogPin = 10; //D8
+int relayExtendPin = HIGH;
 #endif
 
 // these are from vendors
@@ -78,28 +69,19 @@ int relayPin;
 #include "webh/index.html.gz.h"
 
 #ifdef ESP8266
-extern "C" {
-	#include "user_interface.h"
+extern "C"
+{
+#include "user_interface.h"
 }
 #endif
 
 NtpClient NTP;
 AsyncMqttClient mqttClient;
 Ticker mqttReconnectTimer;
-WiFiEventHandler wifiDisconnectHandler, wifiConnectHandler;
-Bounce button;
+WiFiEventHandler wifiDisconnectHandler;
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
-
-unsigned long blink_ = millis();
-bool wifiFlag = false;
-bool configMode = false;
-int wmode;
-uint8_t wifipin = 255;
-uint8_t buttonPin = 255;
-#define LEDoff HIGH
-#define LEDon LOW
 
 // Variables for whole scope
 const char *http_username = "admin";
@@ -112,7 +94,13 @@ unsigned long deltaTime = 0;
 unsigned long uptime = 0;
 bool shouldReboot = false;
 bool activateRelay = false;
+bool activateRelayClose = false;
+bool activateRelayBell = false;
 bool deactivateRelay = false;
+bool deactivateRelayClose = false;
+bool deactivateRelayBell = false;
+bool LatchingRelay = false;
+bool dealatchRelay = false;
 bool inAPMode = false;
 bool isWifiConnected = false;
 unsigned long autoRestartIntervalSeconds = 0;
@@ -126,17 +114,27 @@ unsigned long wifiTimeout = 0;
 unsigned long wiFiUptimeMillis = 0;
 char *deviceHostname = NULL;
 
+
+int WrongInputs = 0;
+int WrongInputsAllowed = 3;
+unsigned long WrongInputsBlock = 10000;
+unsigned long WrongInputsBlockStartMillis = 0;
+bool LockInput = false;
+
+unsigned long WatchdogTime = 5000;
+unsigned long WatchdogTimeStartMillis = millis ();
+bool WatchdogEn = false;
+
 int mqttenabled = 0;
 char *mqttTopic = NULL;
 char *mhs = NULL;
-char *muser = NULL;
-char *mpas = NULL;
 int mport;
 
-int lockType;
 int relayType;
 unsigned long activateTime;
 int timeZone;
+int hitung;
+int count = 1;
 
 unsigned long nextbeat = 0;
 unsigned long interval = 1800;
@@ -151,8 +149,7 @@ unsigned long interval = 1800;
 #include "websocket.esp"
 #include "webserver.esp"
 
-void ICACHE_FLASH_ATTR setup()
-{
+void ICACHE_FLASH_ATTR setup() {
 #ifdef OFFICIALBOARD
 	// Set relay pin to LOW signal as early as possible
 	pinMode(13, OUTPUT);
@@ -160,13 +157,31 @@ void ICACHE_FLASH_ATTR setup()
 	delay(200);
 #endif
 
+#ifndef OFFICIALBOARD
+	// Set relay pin to LOW signal as early as possible
+	pinMode(13, OUTPUT);
+	digitalWrite(13, relayExtendPin);
+	
+	pinMode(relayPinClose, OUTPUT);
+	digitalWrite(relayPinClose, relayExtendPin);
+	
+	pinMode(relayPinBell, OUTPUT);
+	digitalWrite(relayPinBell, relayExtendPin);
+	
+	pinMode(relayAlarmPin, OUTPUT);
+	digitalWrite(relayAlarmPin, relayExtendPin);
+	
+	pinMode(watchdogPin, OUTPUT);
+	digitalWrite(watchdogPin, LOW);
+	
+	delay(200);
+#endif
+
 #ifdef DEBUG
-	Serial.begin(9600);
+	Serial.begin(115200);
 	Serial.println();
-
-	Serial.print(F("[ INFO ] ESP RFID v"));
-	Serial.println(VERSION);
-
+	Serial.println(F("[ INFO ] ESP RFID v0.8"));
+	
 	uint32_t realSize = ESP.getFlashChipRealSize();
 	uint32_t ideSize = ESP.getFlashChipSize();
 	FlashMode_t ideMode = ESP.getFlashChipMode();
@@ -175,31 +190,24 @@ void ICACHE_FLASH_ATTR setup()
 	Serial.printf("Flash ide  size: %u\n", ideSize);
 	Serial.printf("Flash ide speed: %u\n", ESP.getFlashChipSpeed());
 	Serial.printf("Flash ide mode:  %s\n", (ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN"));
-	if (ideSize != realSize)
-	{
+	if (ideSize != realSize) {
 		Serial.println("Flash Chip configuration wrong!\n");
-	}
-	else
-	{
+	} else {
 		Serial.println("Flash Chip configuration ok.\n");
 	}
 #endif
 
-	if (!SPIFFS.begin())
-	{
+	if (!SPIFFS.begin()) {
 #ifdef DEBUG
 		Serial.print(F("[ WARN ] Formatting filesystem..."));
 #endif
-		if (SPIFFS.format())
-		{
+		if (SPIFFS.format()) {
 			writeEvent("WARN", "sys", "Filesystem formatted", "");
 
 #ifdef DEBUG
 			Serial.println(F(" completed!"));
 #endif
-		}
-		else
-		{
+		} else {
 #ifdef DEBUG
 			Serial.println(F(" failed!"));
 			Serial.println(F("[ WARN ] Could not format filesystem!"));
@@ -207,117 +215,156 @@ void ICACHE_FLASH_ATTR setup()
 		}
 	}
 	wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
-	wifiConnectHandler = WiFi.onStationModeConnected(onWifiConnect);
-	configMode = loadConfiguration();
-	if (!configMode)
-	{
+	if (!loadConfiguration()) {
 		fallbacktoAPMode();
-		configMode = false;
-	}
-	else {
-		configMode = true;
 	}
 	setupWebServer();
 	writeEvent("INFO", "sys", "System setup completed, running", "");
 }
 
-void ICACHE_RAM_ATTR loop()
-{
+void ICACHE_RAM_ATTR loop() {
 	currentMillis = millis();
 	deltaTime = currentMillis - previousLoopMillis;
 	uptime = NTP.getUptimeSec();
 	previousLoopMillis = currentMillis;
+	
 
-	button.update();
-	if (button.fell()) 
-	{
-#ifdef DEBUG
-		Serial.println("Button has been pressed");
-#endif
-		writeLatest("", "(used open/close button)", 1);
-		activateRelay = true;
-	}
+	if ((currentMillis - WrongInputsBlockStartMillis >=  WrongInputsBlock) && WrongInputsBlockStartMillis >0)
+  {
+		WrongInputsBlockStartMillis = 0;
+		LockInput = false;
+		WrongInputs = 0;
+		#ifdef DEBUG
+			Serial.print("mili : ");
+			Serial.println(millis());
+			Serial.println("Lock Reset");
+			Serial.print("WrongInputs : ");
+			Serial.println(WrongInputs);
+		#endif
 
-	if (wifipin != 255 && configMode && !wmode)
-	{
-		if (!wifiFlag)
-		{
-			if ((currentMillis - blink_) > 500)
-			{
-				blink_ = currentMillis;
-				digitalWrite(wifipin, !digitalRead(wifipin));
-			}
-		}
-		else
-		{
-			if (!(digitalRead(wifipin)==LEDon)) digitalWrite(wifipin, LEDon);
-		}
-	}
+  }
 
-	if (currentMillis >= cooldown)
-	{
+	if ((currentMillis - WatchdogTimeStartMillis >= WatchdogTime) && !WatchdogEn)
+  {
+		digitalWrite(watchdogPin, HIGH);
+		WatchdogEn = true;
+		#ifdef DEBUG
+			Serial.print("mili : ");
+			Serial.println(millis());
+			Serial.println("Watchdog");
+			Serial.print("WrongInputs : ");
+			Serial.println(WrongInputs);
+		#endif
+		
+  }
+  	if ((currentMillis - WatchdogTimeStartMillis >= WatchdogTime + 100) && WatchdogEn)
+  {
+		digitalWrite(watchdogPin, LOW);
+		WatchdogEn = false;
+		#ifdef DEBUG
+			Serial.print("mili : ");
+			Serial.println(millis());
+			Serial.println("Watchdog Release");
+		#endif
+		WatchdogTimeStartMillis = currentMillis;
+  }
+
+	if (currentMillis >= cooldown) {
+		
+		
 		rfidloop();
-	}
+	
 
-	// Continuous relay mode
-	if (lockType == 1)
-	{
-		if (activateRelay)
-		{
-			// currently OFF, need to switch ON
-			if (digitalRead(relayPin) == !relayType)
-			{
-#ifdef DEBUG
-				Serial.print("mili : ");
-				Serial.println(millis());
-				Serial.println("activating relay now");
-#endif
-				digitalWrite(relayPin, relayType);
-			}
-			else	// currently ON, need to switch OFF
-			{
-#ifdef DEBUG
-				Serial.print("mili : ");
-				Serial.println(millis());
-				Serial.println("deactivating relay now");
-#endif				
-				digitalWrite(relayPin, !relayType);
-			}
-			activateRelay = false;	
-		}
-	}
-	else if (lockType == 0)	// momentary relay mode
-	{
-		if (activateRelay)
-		{
-#ifdef DEBUG
-			Serial.print("mili : ");
-			Serial.println(millis());
-			Serial.println("activating relay now");
-#endif
-			digitalWrite(relayPin, relayType);
-			previousMillis = millis();
-			activateRelay = false;
-			deactivateRelay = true;
-		}
-		else if ((currentMillis - previousMillis >= activateTime) && (deactivateRelay))
-		{
-#ifdef DEBUG
-			Serial.println(currentMillis);
-			Serial.println(previousMillis);
-			Serial.println(activateTime);
-			Serial.println(activateRelay);
-			Serial.println("deactivate relay after this");
-			Serial.print("mili : ");
-			Serial.println(millis());
-#endif
+	switch (hitung){
+		case 1 :
+		if	(LatchingRelay){
 			digitalWrite(relayPin, !relayType);
-			deactivateRelay = false;
+			LatchingRelay = false;
+			dealatchRelay = true;
+		}
+		break;
+
+		case 2:
+		if (dealatchRelay){
+			digitalWrite(relayPin, relayType);
+		}
+	default :
+	count = 1 ;
+	break;
+	
 		}
 	}
+		if (activateRelay) {
+		#ifdef DEBUG
+		Serial.print("mili : ");
+		Serial.println(millis());
+		Serial.println("activating relay now");
+		#endif
+		digitalWrite(relayPin, !relayType);
+		previousMillis = millis();
+		activateRelay = false;
+		deactivateRelay = true;
+	} else if((currentMillis - previousMillis >= activateTime) && (deactivateRelay)) {
+		#ifdef DEBUG
+		Serial.println(currentMillis);
+		Serial.println(previousMillis);
+		Serial.println(activateTime);
+		Serial.println(activateRelay);
+		Serial.println("deactivate relay after this");
+		Serial.print("mili : ");
+		Serial.println(millis());
+		#endif
+		digitalWrite(relayPin, relayType);
+		deactivateRelay = false;
+	}
+		if (activateRelayClose) {
+		#ifdef DEBUG
+		Serial.print("mili : ");
+		Serial.println(millis());
+		Serial.println("activating close relay now");
+		#endif
+		digitalWrite(relayPinClose, !relayExtendPin);
+		previousMillis = millis();
+		activateRelayClose = false;
+		deactivateRelayClose = true;
+	} else if((currentMillis - previousMillis >= activateTime) && (deactivateRelayClose)) {
+		#ifdef DEBUG
+		Serial.println(currentMillis);
+		Serial.println(previousMillis);
+		Serial.println(activateTime);
+		Serial.println(activateRelay);
+		Serial.println("deactivate close relay after this");
+		Serial.print("mili : ");
+		Serial.println(millis());
+		#endif
+		digitalWrite(relayPinClose, relayExtendPin);
+		deactivateRelayClose = false;
+	}
+		if (activateRelayBell) {
+		#ifdef DEBUG
+		Serial.print("mili : ");
+		Serial.println(millis());
+		Serial.println("activating Bell relay now");
+		#endif
+		digitalWrite(relayPinBell, !relayExtendPin);
+		previousMillis = millis();
+		activateRelayBell = false;
+		deactivateRelayBell = true;
+	} else if((currentMillis - previousMillis >= activateTime) && (deactivateRelayBell)) {
+		#ifdef DEBUG
+		Serial.println(currentMillis);
+		Serial.println(previousMillis);
+		Serial.println(activateTime);
+		Serial.println(activateRelay);
+		Serial.println("deactivate Bell relay after this");
+		Serial.print("mili : ");
+		Serial.println(millis());
+		#endif
+		digitalWrite(relayPinBell, relayExtendPin);
+		deactivateRelayBell = false;
+	}	
 
-	if (formatreq)
-	{
+	if (formatreq) {
 #ifdef DEBUG
 		Serial.println(F("[ WARN ] Factory reset initiated..."));
 #endif
@@ -326,65 +373,53 @@ void ICACHE_RAM_ATTR loop()
 		SPIFFS.format();
 		ESP.restart();
 	}
-
-	if (timerequest)
-	{
+	
+	if (timerequest) {
 		timerequest = false;
 		sendTime();
 	}
 
-	if (autoRestartIntervalSeconds > 0 && uptime > autoRestartIntervalSeconds * 1000)
-	{
+	if (autoRestartIntervalSeconds > 0 && uptime > autoRestartIntervalSeconds * 1000) {
 		writeEvent("INFO", "sys", "System is going to reboot", "");
 #ifdef DEBUG
 		Serial.println(F("[ WARN ] Auto restarting..."));
 #endif
 		shouldReboot = true;
 	}
-
-	if (shouldReboot)
-	{
+	
+	if (shouldReboot) {
 		writeEvent("INFO", "sys", "System is going to reboot", "");
 #ifdef DEBUG
 		Serial.println(F("[ INFO ] Rebooting..."));
 #endif
 		ESP.restart();
 	}
-
-	if (isWifiConnected)
-	{
+	
+	if (isWifiConnected) {
 		wiFiUptimeMillis += deltaTime;
 	}
-
-	if (wifiTimeout > 0 && wiFiUptimeMillis > (wifiTimeout * 1000) && isWifiConnected == true)
-	{
+	
+	if (wifiTimeout > 0 && wiFiUptimeMillis > (wifiTimeout * 1000) && isWifiConnected == true) {
 		writeEvent("INFO", "wifi", "WiFi is going to be disabled", "");
 		doDisableWifi = true;
 	}
-
-	if (doDisableWifi == true)
-	{
+	
+	if (doDisableWifi == true) {
 		doDisableWifi = false;
 		wiFiUptimeMillis = 0;
 		disableWifi();
-	}
-	else if (doEnableWifi == true)
-	{
+	} else if (doEnableWifi == true) {
 		writeEvent("INFO", "wifi", "Enabling WiFi", "");
 		doEnableWifi = false;
-		if (!isWifiConnected)
-		{
+		if (!isWifiConnected) {
 			wiFiUptimeMillis = 0;
 			enableWifi();
 		}
 	}
-
-	if (mqttenabled == 1)
-	{
-		if (mqttClient.connected())
-		{
-			if ((unsigned)now() > nextbeat)
-			{
+	
+	if (mqttenabled == 1) {
+		if (mqttClient.connected()) {
+				if ((unsigned)now() > nextbeat) {
 				mqtt_publish_heartbeat(now());
 				nextbeat = (unsigned)now() + interval;
 #ifdef DEBUG
@@ -394,4 +429,5 @@ void ICACHE_RAM_ATTR loop()
 			}
 		}
 	}
+	
 }

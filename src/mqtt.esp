@@ -34,9 +34,7 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
 		break;
 	}
 	writeEvent("WARN", "mqtt", "Disconnected from MQTT server", reasonstr);
-	
 	if (WiFi.isConnected()) {
-		//mqttClient.setServer(mhs, mport);
 		mqttReconnectTimer.once(60, connectToMqtt);
 	}
 }
@@ -64,7 +62,7 @@ void mqtt_publish_heartbeat(time_t heartbeat) {
 	const char *topic = mqttTopic;
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject &root = jsonBuffer.createObject();
-	root["type"] = "heartbeat";
+	root["type"] = "hearthbeat";
 	root["time"] = heartbeat;
 	String mqttBuffer4;
 	root.printTo(mqttBuffer4);

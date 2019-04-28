@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="utf-8">
-    <link href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4godDAkeXUz4hAAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAACD0lEQVRYw+3WO2sUURTA8V+yKGjhIxIDohASrTQ2Cr7tTCJWfgDt7QIpbK38BKL2WqkBLYyCSSMq2PpMwKTQNDYKYhONuzYncLnsY2Z2LUQPXBbm7p3zn3P/98zwr0df9tspGk3W5tdLAxzCOWzo8N+vuI9l1HAME1jF0xiVYgprqBcYt7Av1u3Hnbj+DONVktdwIhb3R0X6sgqlYwwDeI1FvMdOTGIUn6JCpQCO40wkqGMWD/ARI9iYAY1hB15hIYGYwN5YVwpiGr9CpBnsiUSbcTWZS0cdtyPh+nbci7nn8UClAX7icjY3iW9NABotnEghxssC1HE9K/lUWN4oCHEAd2OukJipA/1xo01xJM/jEgY7HOOD2B5iLmRijhQRczrb5zV8wY82T97JibQSHZ2YbiFa2dEMYt2JF60gatEJz5Zox+22Iz+ibzEULoxiBUs5wCqGE5F6ATGANwnEep8YySFq+BwXdifl6xYiFXOxnZi1WLSCDz2EkLXthaJt+wge9UDIvE8MJmI+TE7H4f4M4CWu4HEPvzcGo7eI4/09AIai3TeNo/FS6rYCczgd99yFm3Hkl3CxE323EPM4VTV5t07M42ST5MtlkleFaJf8QlWZikLMZWW/UaXs7SBm/5RwRaOVmD0Rrup2pMm3RtnXqgpXdjueJMLBFlzDu26EKxrD0dPz2Bbvgf/xd8RvSWspJf3AuXYAAAAASUVORK5CYII=" rel="icon" type="image/x-icon" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="description" content="">
@@ -13,7 +12,7 @@
     <link href="css/required.css" rel="stylesheet">
 </head>
 
-<body>
+<body onload="start()">
     <div class="wrapper">
         <!-- Sidebar Holder -->
         <nav id="sidebar">
@@ -75,7 +74,7 @@
             </ul>
             <ul class="list-unstyled CTAs">
                 <li>
-                    <a href="https://github.com/esprfid/esp-rfid" class="download">Project's GitHub Page</a>
+                    <a href="https://github.com/omersiar/esp-rfid" class="download">Project's GitHub Page</a>
                 </li>
                 <li>
                     <a href="https://salt.bountysource.com/checkout/amount?team=esp-rfid" class="download" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Nothing says better thank you than a donation."><i class="glyphicon glyphicon-euro"></i>Donate</a>
@@ -109,7 +108,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <button type="button" onclick="commit();" class="btn btn-success" data-dismiss="modal">Save & Reboot</button>
+                            <button type="button" onclick="commit();" class="btn btn-success">Save & Reboot</button>
                         </div>
                     </div>
                 </div>
@@ -208,7 +207,7 @@
                                 <h4>Current Version:</h4>
                                 <h5 id="versionhead"></h5>
                                 <div class="form-group">
-                                    <input id="binform" onchange="allowUpload();" type="file" name="update" accept=".bin">
+                                    <input id="binform" onchange="allowUpload();" type="file" name="update">
                                 </div>
                                 <div class="pull-right">
                                     <button onclick="upload();" class="btn btn-primary" id="upbtn" disabled="">Update</button>
@@ -226,13 +225,12 @@
         </div>
         <footer class="footer">
             <div id="commit" class="container">
-                <h6 class="text-muted">esp-rfid - This is a <a href="https://github.com/esprfid/esp-rfid/blob/stable/LICENSE">free</a> software.</h6>
+                <h6 class="text-muted">esp-rfid - Unlicensed <a href="https://github.com/omersiar/esp-rfid/blob/master/LICENSE">free</a> software.</h6>
             </div>
         </footer>
         <div class="overlay"></div>
         <script src="js/required.js"></script>
         <script src="js/esprfid.js"></script>
-        <script>start();</script>
 </body>
 
 </html>

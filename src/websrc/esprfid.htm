@@ -78,18 +78,17 @@
     <br>
     <br>
     <legend>General Settings</legend>
-	    <br>
     <div class="row form-group">
         <label class="col-xs-3">Admin Password<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Log On password for the Administrator"></i></label>
         <span class="col-xs-9 col-md-5">
-              <input class="form-control input-sm" placeholder="Administrator Password" id="adminpwd"  type="password">
+              <input class="form-control input-sm" placeholder="Administrator Password" id="adminpwd" type="text">
               </span>
         <br>
     </div>
     <div class="row form-group">
         <label class="col-xs-3">Host Name<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Hostname for your ESP, When Bonjour is installed on your computer you can access your ESP via http://hostname.local"></i></label>
         <span class="col-xs-9 col-md-5">
-              <input class="form-control input-sm" placeholder="Hostname" value="esp-rfid" id="hostname" type="text">
+              <input class="form-control input-sm" placeholder="Hostname" value="IM Security" id="hostname" type="text">
               </span>
         <br>
     </div>
@@ -121,8 +120,7 @@
     <br>
     <br>
     <legend>Hardware Settings</legend>
-    <h6 class="text-muted">Please refer the <a href="https://github.com/esprfid/esp-rfid#pin-layout">documentation</a> for pin configuration.</h6>
-	    <br>
+    <h6 class="text-muted">Please refer the <a href="https://github.com/omersiar/esp-rfid#pin-layout">documentation</a> for pin configuration.</h6>
     <div class="row form-group">
         <label class="col-xs-3">Reader Type<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Choose RFID reader type."></i></label>
         <div class="col-xs-9 col-md-5">
@@ -130,10 +128,6 @@
                 <option selected="selected" value="0">MFRC522</option>
                 <option value="1">Wiegand</option>
                 <option value="2">PN532</option>
-                <option value="3">RDM6300</option>
-                <option value="4">MFRC522 + RDM6300</option>
-                <option value="5">Wiegand + RDM6300</option>
-                <option value="6">PN532 + RDM6300</option>
             </select>
         </div>
     </div>
@@ -203,24 +197,6 @@
     </div>
     <br>
     <div class="row form-group">
-        <label class="col-xs-3">WiFi LED<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Choose &quot;WiFi LED&quot; pin"></i></label>
-        <span class="col-xs-9 col-md-5">
-              <select class="form-control input-sm" id="wifipin">
-                <option selected="selected" value="255">None</option>
-                <option value="0">GPIO-0</option>
-                <option value="1">GPIO-1</option>
-                <option value="2">GPIO-2 (LED_BUILTIN)</option>
-                <option value="4">GPIO-4</option>
-                <option value="5">GPIO-5</option>
-                <option value="12">GPIO-12</option>
-                <option value="13">GPIO-13</option>
-                <option value="14">GPIO-14</option>
-                <option value="15">GPIO-15</option>
-                <option value="16">GPIO-16</option>
-              </select>
-        </span>
-    </div>
-    <div class="row form-group">
         <label class="col-xs-3">Relay Type<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Depending on your electrical setup, you can choose the relay type"></i></label>
         <span class="col-xs-9 col-md-5">
             <select class="form-control input-sm" id="typerly">
@@ -246,39 +222,118 @@
                 </select>
               </span>
         <span class="col-xs-3">
-            <button id="testb" type="button" class="btn btn-primary btn-xs" onclick="testRelay()">Test</button><i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="left" data-content="Test previous relay setting. Keep in mind that this is actually triggers the relay."></i>
-        </span>
+                <button id="testb" type="button" class="btn btn-primary btn-xs" onclick="testRelay()">Test</button><i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="left" data-content="Test previous relay setting. Keep in mind that this is actually triggers the relay."></i>
+              </span>
     </div>
     <div class="row form-group">
-        <label class="col-xs-3">Lock Type<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Use momentary method for door lock counterparts, and the continuous one for electromagnetic locks."></i></label>
-        <span class="col-xs-9 col-md-5">
-            <select class="form-control input-sm" id="lockType" onchange="handleLock();">
-                <option selected="selected" value="0">Momentary</option>
-                <option value="1">Continuous</option>
-            </select>
-        </span>
+        <label class="col-xs-3">Relay Close Pin<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Choose which ESP port is connected to your relay"></i></label>
+        <span class="col-xs-6 col-md-5">
+                <select class="form-control input-sm" id="gpiorlyCls">
+                    <option value="0">GPIO-0</option>
+                    <option value="1">GPIO-1</option>
+                    <option value="2">GPIO-2</option>
+                    <option value="4">GPIO-4</option>
+                    <option value="5">GPIO-5</option>
+                    <option value="12">GPIO-12</option>
+                    <option value="13">GPIO-13</option>
+                    <option selected="selected" value="14">GPIO-14</option>
+                    <option value="15">GPIO-15</option>
+                    <option value="16">GPIO-16</option>
+                </select>
+              </span>
+        <span class="col-xs-3">
+                <button id="testb" type="button" class="btn btn-primary btn-xs" onclick="testRelay()">Test</button><i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="left" data-content="Test previous relay setting. Keep in mind that this is actually triggers the relay."></i>
+              </span>
     </div>
-    <div class="row form-group" id="activateTimeForm">
+    <div class="row form-group">
+        <label class="col-xs-3">Relay Bell Pin<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Choose which ESP port is connected to your relay"></i></label>
+        <span class="col-xs-6 col-md-5">
+                <select class="form-control input-sm" id="gpiorlyBell">
+                    <option value="0">GPIO-0</option>
+                    <option value="1">GPIO-1</option>
+                    <option value="2">GPIO-2</option>
+                    <option value="4">GPIO-4</option>
+                    <option value="5">GPIO-5</option>
+                    <option selected="selected" value="12">GPIO-12</option>
+                    <option value="13">GPIO-13</option>
+                    <option value="14">GPIO-14</option>
+                    <option value="15">GPIO-15</option>
+                    <option value="16">GPIO-16</option>
+                </select>
+              </span>
+        <span class="col-xs-3">
+                <button id="testb" type="button" class="btn btn-primary btn-xs" onclick="testRelay()">Test</button><i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="left" data-content="Test previous relay setting. Keep in mind that this is actually triggers the relay."></i>
+              </span>
+    </div>
+    <div class="row form-group">
+        <label class="col-xs-3">Watchdog Pin<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Choose which ESP port is connected to your Watchdog"></i></label>
+        <span class="col-xs-6 col-md-5">
+                <select class="form-control input-sm" id="gpioWatchDog">
+                    <option value="0">GPIO-0</option>
+                    <option value="1">GPIO-1</option>
+                    <option value="2">GPIO-2</option>
+                    <option value="4">GPIO-4</option>
+                    <option value="5">GPIO-5</option>
+                    <option value="12">GPIO-12</option>
+                    <option value="13">GPIO-13</option>
+                    <option value="14">GPIO-14</option>
+                    <option selected="selected" value="15">GPIO-15</option>
+                    <option value="16">GPIO-16</option>
+                </select>
+              </span>
+        <span class="col-xs-3">
+                <button id="testb" type="button" class="btn btn-primary btn-xs" onclick="testRelay()">Test</button><i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="left" data-content="Test previous relay setting. Keep in mind that this is actually triggers the relay."></i>
+              </span>
+    </div>
+    <div class="row form-group">
+        <label class="col-xs-3">Alarm output Pin<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Choose which ESP port is connected to your Alarm output pin"></i></label>
+        <span class="col-xs-6 col-md-5">
+                <select class="form-control input-sm" id="gpiorlyAlarm">
+                    <option value="0">GPIO-0</option>
+                    <option value="1">GPIO-1</option>
+                    <option value="2">GPIO-2</option>
+                    <option value="4">GPIO-4</option>
+                    <option value="5">GPIO-5</option>
+                    <option value="12">GPIO-12</option>
+                    <option selected="selected" value="13">GPIO-13</option>
+                    <option value="14">GPIO-14</option>
+                    <option value="15">GPIO-15</option>
+                    <option value="16">GPIO-16</option>
+                </select>
+              </span>
+        <span class="col-xs-3">
+                <button id="testb" type="button" class="btn btn-primary btn-xs" onclick="testRelay()">Test</button><i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="left" data-content="Test previous relay setting. Keep in mind that this is actually triggers the relay."></i>
+              </span>
+    </div>
+    <div class="row form-group">
+        <label class="col-xs-3">Alarm input Pin<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Choose which ESP port is connected to your Alarm input pin"></i></label>
+        <span class="col-xs-6 col-md-5">
+                <select class="form-control input-sm" id="gpioinAlarm">
+                    <option value="0">GPIO-0</option>
+                    <option value="1">GPIO-1</option>
+                    <option value="2">GPIO-2</option>
+                    <option selected="selected" value="4">GPIO-4</option>
+                    <option value="5">GPIO-5</option>
+                    <option value="12">GPIO-12</option>
+                    <option value="13">GPIO-13</option>
+                    <option value="14">GPIO-14</option>
+                    <option value="15">GPIO-15</option>
+                    <option value="16">GPIO-16</option>
+                </select>
+              </span>
+        <span class="col-xs-3">
+                <button id="testb" type="button" class="btn btn-primary btn-xs" onclick="testRelay()">Test</button><i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="left" data-content="Test previous relay setting. Keep in mind that this is actually triggers the relay."></i>
+              </span>
+    </div>
+
+
+
+
+    <div class="row form-group">
         <label class="col-xs-3">Activate Time<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Relay Toggle time in Microseconds, usually 300ms is enough for the most electric door locks"></i></label>
         <span class="col-xs-9 col-md-5">
-            <input class="form-control input-sm" value="300" placeholder="in Microsecond" id="delay" type="text" name="hightime">
-        </span>
-    </div>
-    <br>
-    <div class="row form-group">
-        <label class="col-xs-3">Button Pin<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Choose a pin to have a button with equivalent behaviour to scan a valid card (open/close button)."></i></label>
-        <span class="col-xs-9 col-md-5">
-            <select class="form-control input-sm" id="buttonPin">
-                <option selected="selected" value="255">None</option>
-                <option value="4">GPIO-4</option>
-                <option value="5">GPIO-5</option>
-                <option value="12">GPIO-12</option>
-                <option value="13">GPIO-13</option>
-                <option value="14">GPIO-14</option>
-            </select>
-        </span>
-    </div>
-    <div class="row form-group">
+              <input class="form-control input-sm" value="300" placeholder="in Microsecond" id="delay" type="text" name="hightime">
+    </span>
         <br>
         <br>
         <div class="col-xs-9 col-md-8">
@@ -336,7 +391,6 @@
     <br>
     <br>
     <legend>MQTT Settings</legend>
-	    <br>
     <div class="row form-group">
         <label class="col-xs-3">MQTT<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Please choose if you want to enable MQTT"></i></label>
         <div class="col-xs-9">
@@ -372,7 +426,7 @@
     <div class="row form-group">
         <label class="col-xs-3">Password<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="MQTT server password if any"></i></label>
         <span class="col-xs-9">
-    <input class="form-control input-sm" placeholder="" value="" style="display:inline;max-width:185px" id="mqttpwd"  type="password">
+    <input class="form-control input-sm" placeholder="" value="" style="display:inline;max-width:185px" id="mqttpwd" type="text">
   </span>
         <br>
     </div>
@@ -409,11 +463,11 @@
     </div>
     <div class="row form-group">
         <label class="col-xs-3">SSID<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Wi-Fi Network's Name"></i></label>
-        <span class="col-xs-7 col-md-5">
+        <span class="col-xs-6 col-md-5">
                 <input class="form-control input-sm" id="inputtohide" type="text" name="ap_ssid">
                 <select class="form-control input-sm" style="display:none;" id="ssid" onchange="listBSSID();"></select>
               </span>
-        <span class="col-xs-2">
+        <span class="col-xs-3">
                 <button id="scanb" type="button" class="btn btn-primary btn-xs" style="display:none;" onclick="scanWifi()">Scan</button>
               </span>
     </div>
@@ -426,7 +480,7 @@
     <div class="row form-group">
         <label class="col-xs-3">Password<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Wi-Fi Password"></i></label>
         <span class="col-xs-9 col-md-5">
-              <input id="wifipass" class="form-control input-sm" name="ap_passwd" type="password">
+              <input id="wifipass" class="form-control input-sm" type="text" name="ap_passwd">
               </span>
     </div>
     <br>
@@ -453,21 +507,19 @@
             </form>
         </div>
     </div>
-    <div id="staticip1" style="display:none">
+    <div id="staticip" style="display:none">
         <div class="row form-group">
-            <label class="col-xs-3">IP Address<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-html="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Enter IP Address<BR>(for example 192.168.4.1)"></i></label>
+            <label class="col-xs-3">IP Address</label>
             <span class="col-xs-9 col-md-5">
               <input id="ipaddress" class="form-control input-sm">
               </span>
         </div>
         <div class="row form-group">
-            <label class="col-xs-3">Subnet Mask<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign" aria-hidden="true" data-html="true" data-toggle="popover" data-trigger="hover" data-placement="right" data-content="Enter Subnet Mask<BR>(for example 255.255.255.0)"></i></label>
+            <label class="col-xs-3">Subnet</label>
             <span class="col-xs-9 col-md-5">
               <input id="subnet" class="form-control input-sm">
               </span>
         </div>
-    </div>
-    <div id="staticip2" style="display:none">
         <div class="row form-group">
             <label class="col-xs-3">DNS Server</label>
             <span class="col-xs-9 col-md-5">
@@ -508,8 +560,7 @@
     <br>
     <br>
     <legend>Time Settings</legend>
-    <h6 class="text-muted">Small differences between device time and local time can be ignored. Please see <a href="https://github.com/esprfid/esp-rfid#time">documentation</a> for additional information.</h6>
-	<br>
+    <h6 class="text-muted">Small differences between device time and local time can be ignored. Please see <a href="https://github.com/omersiar/esp-rfid#time">documentation</a> for additional information.</h6>
     <div class="row form-group">
         <label class="col-xs-3">Device Time</label>
         <span id="utc" class="col-xs-9 col-md-5">
@@ -590,13 +641,14 @@
 </div>
 <div id="statuscontent">
     <br>
+    <br>
     <div class="row text-center">
         <div class="col-md-8 col-md-offset-2">
             <h1>Welcome</h1>
             <p>Here you can find some information about your device status.</p>
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <span>esp-rfid Access Control</span>&nbsp; <small><strong><span id="sver"></span></strong></small>
+                    <span>IM Security Access Control</span>&nbsp; <small><strong><span id="sver"></span></strong></small>
                 </div>
             </div>
         </div>
@@ -687,7 +739,7 @@
         <h5>Please wait while fetching data... <span id="loadpages"></span></h5>
     </div>
     <br>
-    <div class="text-center" id="usersbanner">
+    <div class="text-center">
         <h5>You can add new users by either scanning a RFID Tag or by clicking on "New User" button.</h5>
     </div>
     <br>
@@ -718,7 +770,7 @@
                     </div>
                     <div class="form-group required">
                         <label for="uid" class="col-sm-3 control-label">UID</label>
-                        <div class="col-sm-9" style="font-family:monospace">
+                        <div class="col-sm-9">
                             <input type="text" class="form-control" id="uid" name="uid" placeholder="UID" required>
                         </div>
                     </div>
@@ -733,6 +785,9 @@
                         <div class="col-sm-9">
                             <select class="form-control" id="acctype" required>
                                 <option selected="selected" value="1">Always</option>
+                                <option value="7">Latching</option>
+								<option value="8">Closing</option>
+								<option value="9">Bell</option>
                                 <!--
                                 <option value="2">Within Selected Hours</option>
                                 <option value="3">Within Selected Days</option>
